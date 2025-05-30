@@ -176,3 +176,110 @@ class EnemyPlane(Plane):
             self.last_shot = current_time
             return Laser(self.x, self.y + self.height // 2, ENEMY_LASER_SPEED, RED)
         return None
+
+class BossPlane(Plane):
+    """Powerful boss plane that appears after killing multiple enemies"""
+    
+    def __init__(self, x, y):
+        super().__init__(x, y, BOSS_COLOR, BOSS_HEALTH)
+        self.width = BOSS_WIDTH
+        self.height = BOSS_HEIGHT
+        self.speed = BOSS_SPEED
+        self.show_health = True
+        self.direction_x = random.choice([-1, 1])
+        self.direction_y = 0  # Boss stays at relatively same height
+        self.change_direction_timer = 0
+        self.shoot_cooldown = 800  # Faster shooting than regular enemies
+    
+    def update(self):
+        """Update boss plane AI movement - more sophisticated than regular enemies"""
+        # Change direction occasionally for evasive maneuvers
+        self.change_direction_timer += 1
+        if self.change_direction_timer > random.randint(30, 90):  # More frequent direction changes
+            self.direction_x = random.choice([-1, 0, 1])
+            # Occasionally move slightly up or down
+            self.direction_y = random.choice([-0.5, 0, 0.5])
+            self.change_direction_timer = 0
+        
+        # Move sideways and occasionally up/down
+        self.x += self.direction_x * self.speed
+        self.y += self.direction_y * self.speed
+        
+        # Keep within screen bounds (horizontally)
+        if self.x <= self.width // 2:
+            self.direction_x = 1
+        elif self.x >= SCREEN_WIDTH - self.width // 2:
+            self.direction_x = -1
+            
+        # Keep within the top portion of the screen (vertically)
+        if self.y <= self.height:
+            self.direction_y = 0.5
+        elif self.y >= SCREEN_HEIGHT // 3:
+            self.direction_y = -0.5
+    
+    def shoot(self):
+        """Shoot a more powerful laser towards player"""
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_shot > self.shoot_cooldown:
+            self.last_shot = current_time
+            return Laser(self.x, self.y + self.height // 2, BOSS_LASER_SPEED, RED, damage=BOSS_LASER_DAMAGE)
+        return None
+    
+    def draw(self, screen):
+        """Draw the boss plane with a more imposing, kid-friendly design"""
+        # Draw main fuselage (rectangle body) - larger than regular planes
+        fuselage_width = self.width // 3
+        fuselage_height = self.height // 1.5
+        fuselage_rect = pygame.Rect(
+            self.x - fuselage_width // 2,
+            self.y - fuselage_height // 2,
+            fuselage_width,
+            fuselage_height
+            )
+        pygame.draw.rect(screen, self.color, fuselage_rect)
+
+        # Draw left wing (triangle) - larger
+        left_wing_points = [
+        (self.x - fuselage_width // 2, self.y - fuselage_height // 4), # wing root
+        (self.x - self.width // 2, self.y), # wing tip
+        (self.x - fuselage_width // 2, self.y + fuselage_height // 4) # wing back
+        ]
+        pygame.draw.polygon(screen, self.color, left_wing_points)
+        
+        # Draw right wing (triangle) - larger
+        right_wing_points = [
+        (self.x + fuselage_width // 2, self.y - fuselage_height // 4), # wing root
+        (self.x + self.width // 2, self.y), # wing tip
+        (self.x + fuselage_width // 2, self.y + fuselage_height // 4) # wing back
+        ]
+        pygame.draw.polygon(screen, self.color, right_wing_points)
+        
+        # Draw nose (triangle) - more aggressive angle
+        nose_points = [
+            (self.x - fuselage_width // 2, self.y - fuselage_height // 2), # left corner
+            (self.x, self.y - fuselage_height), # tip
+            (self.x + fuselage_width // 2, self.y - fuselage_height // 2) # right corner
+            ]
+        pygame.draw.polygon(screen, self.color, nose_points)
+
+        # Draw tail (triangle) - larger
+        tail_points = [
+            (self.x - fuselage_width // 2, self.y + fuselage_height // 2), # left corner
+            (self.x, self.y + fuselage_height), # tip
+            (self.x + fuselage_width // 2, self.y + fuselage_height // 2) # right corner
+        ]
+        pygame.draw.polygon(screen, self.color, tail_points)
+
+        # Draw cockpit (small darker circle on top)
+        cockpit_color = tuple(max(0, c - 50) for c in self.color) # Darker shade
+        cockpit_pos = (self.x, self.y - fuselage_height // 4)
+        cockpit_radius = fuselage_width // 3
+        pygame.draw.circle(screen, cockpit_color, cockpit_pos, cockpit_radius)
+        
+        # Add extra details for boss plane
+        # Wing tips
+        pygame.draw.circle(screen, BLACK, (int(self.x - self.width // 2), int(self.y)), 5)
+        pygame.draw.circle(screen, BLACK, (int(self.x + self.width // 2), int(self.y)), 5)
+        
+        # Draw health bar for boss
+        self._draw_health_bar(screen)

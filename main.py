@@ -8,7 +8,7 @@ import sys
 import random
 import math
 from typing import List, Tuple
-from src.plane import PlayerPlane, EnemyPlane
+from src.plane import PlayerPlane, EnemyPlane, BossPlane
 from src.laser import Laser
 from src.cloud import Cloud
 from src.ui import UI
@@ -27,6 +27,10 @@ class TejasThrust:
         
         # Game clock
         self.clock = pygame.time.Clock()
+
+        # Background music
+        pygame.mixer.music.load('assets/sounds/TT.wav')  # Replace with your music file
+        pygame.mixer.music.play(-1)  # Play the music in a loop
         
         # Game state
         self.running = True
@@ -36,10 +40,13 @@ class TejasThrust:
         # Score and health
         self.score = 0
         self.player_health = PLAYER_MAX_HEALTH
+        self.enemies_killed = 0  # Track how many enemies have been destroyed
+        self.boss_active = False  # Flag to track if boss is currently active
         
         # Game objects
         self.player = PlayerPlane(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100)
         self.enemies: List[EnemyPlane] = []
+        self.boss: BossPlane = None  # Boss plane reference
         self.player_lasers: List[Laser] = []
         self.enemy_lasers: List[Laser] = []
         self.clouds: List[Cloud] = []
@@ -69,7 +76,16 @@ class TejasThrust:
     def spawn_enemy(self):
         """Spawn a new enemy plane"""
         current_time = pygame.time.get_ticks()
-        if current_time - self.last_enemy_spawn > ENEMY_SPAWN_INTERVAL:
+        
+        # Check if it's time to spawn a boss
+        if self.enemies_killed > 0 and self.enemies_killed % BOSS_SPAWN_COUNT == 0 and not self.boss_active:
+            # Spawn a boss plane at the top center
+            self.boss = BossPlane(SCREEN_WIDTH // 2, 100)
+            self.boss_active = True
+            return
+            
+        # Only spawn regular enemies if no boss is active and it's time
+        if current_time - self.last_enemy_spawn > ENEMY_SPAWN_INTERVAL and not self.boss_active:
             x = random.randint(50, SCREEN_WIDTH - 50)
             y = random.randint(-100, -50)
             enemy = EnemyPlane(x, y)
@@ -129,6 +145,16 @@ class TejasThrust:
                 if laser:
                     self.enemy_lasers.append(laser)
         
+        # Update boss if active
+        if self.boss_active and self.boss:
+            self.boss.update()
+            
+            # Boss shooting (more frequent)
+            if random.random() < BOSS_SHOOT_CHANCE:
+                laser = self.boss.shoot()
+                if laser:
+                    self.enemy_lasers.append(laser)
+        
         # Update lasers
         for laser in self.player_lasers[:]:
             laser.update()
@@ -155,21 +181,36 @@ class TejasThrust:
         """Check all collision detection"""
         # Player lasers hit enemies
         for laser in self.player_lasers[:]:
+            # Check collision with regular enemies
             for enemy in self.enemies[:]:
                 if laser.get_rect().colliderect(enemy.get_rect()):
-                    self.player_lasers.remove(laser)
+                    if laser in self.player_lasers:  # Avoid processing removed lasers
+                        self.player_lasers.remove(laser)
                     enemy.take_damage()
                     
                     if enemy.health <= 0:
                         self.enemies.remove(enemy)
                         self.score += 1
+                        self.enemies_killed += 1
                     break
+            
+            # Check collision with boss (if active)
+            if self.boss_active and self.boss and laser in self.player_lasers:
+                if laser.get_rect().colliderect(self.boss.get_rect()):
+                    self.player_lasers.remove(laser)
+                    self.boss.take_damage()
+                    
+                    if self.boss.health <= 0:
+                        self.boss = None
+                        self.boss_active = False
+                        self.score += 5  # Bonus points for defeating boss
+                        self.enemies_killed += 1  # Count boss as an enemy for spawning logic
         
         # Enemy lasers hit player
         for laser in self.enemy_lasers[:]:
             if laser.get_rect().colliderect(self.player.get_rect()):
                 self.enemy_lasers.remove(laser)
-                self.player_health -= 1
+                self.player_health -= laser.damage  # Use the laser's damage value
     
     def draw(self):
         """Draw all game objects"""
@@ -186,6 +227,10 @@ class TejasThrust:
         # Draw enemies
         for enemy in self.enemies:
             enemy.draw(self.screen)
+        
+        # Draw boss if active
+        if self.boss_active and self.boss:
+            self.boss.draw(self.screen)
         
         # Draw lasers
         for laser in self.player_lasers:
