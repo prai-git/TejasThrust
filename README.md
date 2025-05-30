@@ -10,6 +10,8 @@ A professional single-player dog fight game designed for kids aged 5-12 years. B
 - **Professional UI**: Clean, modern interface with animated clouds background
 - **Kid-Friendly Controls**: Simple arrow keys for movement, spacebar to shoot
 - **Health System**: Player has 100 health points, enemies require 2 hits to defeat
+- **BOSS Planes**: Special red BOSS planes appear after every 50 enemy kills
+- **Background Music**: Immersive audio experience during gameplay
 - **Smooth Animations**: All movements are fluid and responsive
 - **Pause/Resume**: Full game state management with pause functionality
 - **Score Tracking**: Real-time score display and final score on game over
@@ -25,11 +27,15 @@ A professional single-player dog fight game designed for kids aged 5-12 years. B
 ### Gameplay Mechanics
 - Player plane is **blue colored**
 - Enemy planes are **black/dark gray colored**
+- BOSS planes are **red colored** and appear after every 50 enemy kills
 - Lasers are **bright yellow** with glow effects
 - Enemy planes spawn every 2 seconds and move randomly
 - Player health decreases by 1 when hit by enemy lasers
+- Player health decreases by 5 when hit by BOSS lasers
 - Enemy planes are destroyed after 2 hits
+- BOSS planes require 5 hits to defeat
 - Score increases by 1 for each enemy plane destroyed
+- Score increases by 5 for each BOSS plane destroyed
 - Game ends when player health reaches 0
 
 ### Visual Features
@@ -39,6 +45,11 @@ A professional single-player dog fight game designed for kids aged 5-12 years. B
 - Real-time health and score display in top-right corner
 - Exit button in bottom-left corner
 - Pause/Resume button in bottom-right corner
+- Distinctive larger BOSS planes with more aggressive behavior
+
+### Audio Features
+- Background music plays continuously during gameplay
+- Music loops seamlessly for uninterrupted experience
 
 ## 🚀 Installation & Setup
 
@@ -125,8 +136,15 @@ pytest tests/test_game.py -v
 The game difficulty can be adjusted by modifying values in `src/config.py`:
 - `ENEMY_SPAWN_INTERVAL`: Time between enemy spawns (default: 2000ms)
 - `ENEMY_SHOOT_CHANCE`: Probability of enemy shooting per frame (default: 0.005)
+- `BOSS_SPAWN_COUNT`: Number of enemies before a boss appears (default: 50)
+- `BOSS_HEALTH`: Boss plane health (default: 5)
+- `BOSS_LASER_DAMAGE`: Damage dealt by boss lasers (default: 5)
 - `PLAYER_SPEED` and `ENEMY_SPEED`: Movement speeds
 - `PLAYER_MAX_HEALTH`: Starting player health (default: 100)
+
+### Audio Customization
+- Replace `TT.wav` in the `assets/sounds` folder with your own audio file
+- Adjust volume settings in the game code
 
 ### Visual Customization
 - Modify colors in `src/config.py`
@@ -159,12 +177,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🎯 Future Enhancements
 
-- Sound effects and background music
+- Additional sound effects for shooting and explosions
 - Power-ups and special weapons
 - Multiple difficulty levels
 - High score persistence
 - Multiplayer support
 - Touch screen controls for tablets
+- More BOSS types with unique abilities
 
 ## 📞 Support
 
