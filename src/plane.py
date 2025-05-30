@@ -32,23 +32,54 @@ class Plane:
         self.health -= 1
     
     def draw(self, screen):
-        """Draw the plane"""
-        # Draw plane body (triangle shape)
-        points = [
-            (self.x, self.y - self.height // 2),  # nose
-            (self.x - self.width // 2, self.y + self.height // 2),  # left wing
-            (self.x + self.width // 2, self.y + self.height // 2),  # right wing
+        """Draw the plane with a simple, kid-friendly design"""
+        # Draw main fuselage (rectangle body)
+        fuselage_width = self.width // 3
+        fuselage_height = self.height // 1.5
+        fuselage_rect = pygame.Rect(
+            self.x - fuselage_width // 2,
+            self.y - fuselage_height // 2,
+            fuselage_width,
+            fuselage_height
+            )
+        pygame.draw.rect(screen, self.color, fuselage_rect)
+
+        # Draw left wing (triangle)
+        left_wing_points = [
+        (self.x - fuselage_width // 2, self.y - fuselage_height // 4), # wing root
+        (self.x - self.width // 2, self.y), # wing tip
+        (self.x - fuselage_width // 2, self.y + fuselage_height // 4) # wing back
         ]
-        pygame.draw.polygon(screen, self.color, points)
-        
-        # Draw tail (smaller triangle at the back)
+        pygame.draw.polygon(screen, self.color, left_wing_points)
+        # Draw right wing (triangle)
+        right_wing_points = [
+        (self.x + fuselage_width // 2, self.y - fuselage_height // 4), # wing root
+        (self.x + self.width // 2, self.y), # wing tip
+        (self.x + fuselage_width // 2, self.y + fuselage_height // 4) # wing back
+        ]
+        pygame.draw.polygon(screen, self.color, right_wing_points)
+        # Draw nose (triangle)
+        nose_points = [
+            (self.x - fuselage_width // 2, self.y - fuselage_height // 2), # left corner
+            (self.x, self.y - fuselage_height), # tip
+            (self.x + fuselage_width // 2, self.y - fuselage_height // 2) # right corner
+            ]
+        pygame.draw.polygon(screen, self.color, nose_points)
+
+        # Draw tail (triangle)
         tail_points = [
-            (self.x - self.width // 6, self.y + self.height // 2),  # tail front
-            (self.x - self.width // 4, self.y + self.height // 2 + self.height // 4),  # tail left
-            (self.x + self.width // 4, self.y + self.height // 2 + self.height // 4),  # tail right
+            (self.x - fuselage_width // 2, self.y + fuselage_height // 2), # left corner
+            (self.x, self.y + fuselage_height), # tip
+            (self.x + fuselage_width // 2, self.y + fuselage_height // 2) # right corner
         ]
         pygame.draw.polygon(screen, self.color, tail_points)
-        
+
+        # Draw cockpit (small darker circle on top)
+        cockpit_color = tuple(max(0, c - 50) for c in self.color) # Darker shade
+        cockpit_pos = (self.x, self.y - fuselage_height // 4)
+        cockpit_radius = fuselage_width // 3
+        pygame.draw.circle(screen, cockpit_color, cockpit_pos, cockpit_radius)
+
         # Draw health bar for enemies
         if hasattr(self, 'show_health') and self.show_health and self.health < self.max_health:
             self._draw_health_bar(screen)
